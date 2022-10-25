@@ -6,5 +6,5 @@ license = "GPL-3.0"
 authors = ["memothelemo <memothelemo@protonmail.com>"]
 
 [dependencies]
-ribbon_api = { path = "./api" }
+ribbon_api = { path = "./crates/api" }
 tokio = { version = "1.21.2", features = ["full"] }

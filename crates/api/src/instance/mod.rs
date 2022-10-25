@@ -14,6 +14,37 @@ pub enum InstanceCloneError {
     OverrideRequired,
 }
 
+#[async_trait]
+pub trait CreatableInstance: InstanceType {
+    #[doc(hidden)]
+    fn create_impl(parent: Option<InstanceRef>) -> Self;
+
+    async fn create(parent: Option<InstanceRef>, arena: InstanceArena) -> InstanceRef
+    where
+        Self: Sized,
+    {
+        let instance = Self::create_impl(parent);
+
+        let mut arena = arena.write().await;
+        let assigned = arena.alloc(Arc::new(Mutex::new(instance)));
+
+        let mut instance = arena[assigned].lock().await;
+        instance._base_mut().arena_id.set(assigned).unwrap();
+        drop(instance);
+
+        assigned
+    }
+}
+
+/// Placeholder for [InstanceType].
+pub struct Instance(());
+
+impl Instance {
+    pub async fn new<T: CreatableInstance>(parent: Option<InstanceRef>, arena: InstanceArena) -> InstanceRef {
+        T::create(parent, arena).await
+    }
+}
+
 /// ## Definition from Roblox
 /// Instance is the base class for all classes in
 /// the Roblox class hierarchy.
@@ -25,23 +56,23 @@ pub enum InstanceCloneError {
 ///
 /// Source: https://create.roblox.com/docs/reference/engine/classes/Instance
 #[async_trait]
-pub trait Instance: 'static + Send + Sync {
+pub trait InstanceType: 'static + Send + Sync {
     /// A low level way to get the base instance.
     #[doc(hidden)]
-    fn _base(&self) -> &BaseInstanceImpl;
+    fn _base(&self) -> &BaseInstance;
 
     /// A low level way to get the base instance
     /// with mutable reference that will affect
     /// from the object itself.
     #[doc(hidden)]
-    fn _base_mut(&mut self) -> &mut BaseInstanceImpl;
+    fn _base_mut(&mut self) -> &mut BaseInstance;
 
     /// Returns the class name of the Instance
     fn class_name(&self) -> &'static str;
 
     /// Destroys all of an [Instance]'s children.
     async fn clear_all_children(&mut self, arena: prelude::InstanceArena) {
-        let arena = arena.lock().await;
+        let arena = arena.read().await;
         let children = &mut self._base_mut().children;
         for child in children.iter() {
             let mut child = arena[*child].lock().await;
@@ -69,7 +100,7 @@ pub trait Instance: 'static + Send + Sync {
 
         let children = &mut self._base_mut().children;
         for child in children.iter() {
-            let arena_ref = arena.lock().await;
+            let arena_ref = arena.read().await;
             let mut child = arena_ref[*child].lock().await;
             println!("RACE CONDITION #1");
             child.destroy(arena.clone()).await;
@@ -89,13 +120,14 @@ pub trait Instance: 'static + Send + Sync {
 
     async fn set_parent(&mut self, parent: prelude::InstanceRef, arena: InstanceArena) {
         self._base_mut().parent = Some(parent);
-        let parent = &mut arena.lock().await[parent];
+
+        let parent = &arena.read().await[parent];
         parent.lock().await._base_mut().children.push(*self._base().arena_id.get().unwrap());
     }
 }
 
-impl std::fmt::Debug for dyn Instance + 'static {
+impl std::fmt::Debug for dyn InstanceType + 'static {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("Instance").field(&self._base().id).finish()
+        self._base().id.fmt(f)
     }
 }

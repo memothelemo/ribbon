@@ -1,7 +1,7 @@
 use crate::instance::prelude::*;
 use crate::InstanceRef;
 
-pub struct BaseInstanceImpl {
+pub struct BaseInstance {
     // practically useless but useful later on
     pub(crate) id: Ref,
     pub(crate) arena_id: OnceCell<InstanceRef>,
@@ -11,15 +11,25 @@ pub struct BaseInstanceImpl {
     pub(crate) parent: Option<InstanceRef>,
 }
 
-impl BaseInstanceImpl {
-    pub(crate) async fn new(name: &'static str, parent: Option<InstanceRef>, arena: InstanceArena) -> Self {
+impl Default for BaseInstance {
+    fn default() -> Self {
         Self {
             id: Ref::new(),
             arena_id: OnceCell::new(),
 
-            name: name.to_string(),
+            name: String::from("Instance"),
             children: Vec::new(),
+            parent: None,
+        }
+    }
+}
+
+impl BaseInstance {
+    pub(crate) fn new(name: &'static str, parent: Option<InstanceRef>) -> Self {
+        Self{
+            name: name.to_string(),
             parent,
+            ..Default::default()
         }
     }
 
@@ -27,7 +37,7 @@ impl BaseInstanceImpl {
         // generate new children
         let mut children = Vec::new();
         for child in self.children.iter() {
-            let arena_ref = arena.lock().await;
+            let arena_ref = arena.read().await;
             let child = arena_ref[*child].lock().await;
             println!("RACE CONDITION #2");
             children.push(child.clone(arena.clone()).await?);

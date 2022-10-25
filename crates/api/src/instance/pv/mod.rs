@@ -3,27 +3,25 @@ use crate::instance::prelude::*;
 mod basepart;
 pub use basepart::*;
 
-pub struct PVInstanceImpl {
-    pub(crate) base: BaseInstanceImpl,
+#[derive(Default)]
+pub struct PVInstance {
+    pub(crate) base: BaseInstance,
     pub(crate) origin_orientation: Vector3,
     pub(crate) origin_position: Vector3,
     pub(crate) pivot_origin_orientation: Vector3,
     pub(crate) pivot_origin_position: Vector3,
 }
 
-impl PVInstanceImpl {
-    pub(crate) async fn new(name: &'static str, parent: Option<InstanceRef>, arena: InstanceArena) -> Self {
+impl PVInstance {
+    pub(crate) fn new(name: &'static str, parent: Option<InstanceRef>) -> Self {
         Self {
-            base: BaseInstanceImpl::new(name, parent, arena).await,
-            origin_orientation: Vector3::new(0., 0., 0.),
-            origin_position: Vector3::new(0., 0., 0.),
-            pivot_origin_orientation: Vector3::new(0., 0., 0.),
-            pivot_origin_position: Vector3::new(0., 0., 0.),
+            base: BaseInstance::new(name, parent),
+            ..Default::default()
         }
     }
 
     pub(crate) async fn clone(&self, arena: InstanceArena) -> Result<Self, InstanceCloneError> {
-        let base = BaseInstanceImpl::clone(&self.base, arena).await?;
+        let base = BaseInstance::clone(&self.base, arena).await?;
         Ok(Self {
             base,
             origin_orientation: self.origin_orientation,
@@ -34,9 +32,9 @@ impl PVInstanceImpl {
     }
 }
 
-pub trait PVInstance: Instance {
-    fn _pv(&self) -> &PVInstanceImpl;
-    fn _pv_mut(&mut self) -> &mut PVInstanceImpl;
+pub trait PVInstanceType: InstanceType {
+    fn _pv(&self) -> &PVInstance;
+    fn _pv_mut(&mut self) -> &mut PVInstance;
 
     fn origin_orientation(&self) -> Vector3 {
         self._pv().origin_orientation
