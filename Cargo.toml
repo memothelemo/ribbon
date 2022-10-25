@@ -1,9 +1,10 @@
 [package]
-name = "riboon"
+name = "ribbon"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0"
 authors = ["memothelemo <memothelemo@protonmail.com>"]
 
 [dependencies]
-id-arena = "2.2.1"
+ribbon_api = { path = "./api" }
+tokio = { version = "1.21.2", features = ["full"] }
