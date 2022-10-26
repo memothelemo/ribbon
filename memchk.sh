@@ -1,0 +1,1 @@
+cargo build && valgrind --leak-check=full -s ./target/debug/ribbon
