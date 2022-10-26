@@ -38,7 +38,7 @@ impl BaseInstance {
         let mut children = Vec::new();
         for child in self.children.iter() {
             let arena_ref = arena.read().await;
-            let child = arena_ref[*child].lock().await;
+            let child = arena_ref[*child].write().await;
             println!("RACE CONDITION #2");
             children.push(child.clone(arena.clone()).await?);
             println!("RACE CONDITION #2 done");

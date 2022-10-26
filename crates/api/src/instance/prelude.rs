@@ -6,7 +6,7 @@ pub(crate) use once_cell::sync::OnceCell;
 pub(crate) use rbx_types::*;
 
 pub(crate) use std::sync::Arc;
-pub(crate) use tokio::sync::Mutex;
+pub(crate) use tokio::sync::RwLock;
 
 #[macro_export]
 macro_rules! get_obj {

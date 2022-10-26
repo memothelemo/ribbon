@@ -26,9 +26,9 @@ pub trait CreatableInstance: InstanceType {
         let instance = Self::create_impl(parent);
 
         let mut arena = arena.write().await;
-        let assigned = arena.alloc(Arc::new(Mutex::new(instance)));
+        let assigned = arena.alloc(Arc::new(RwLock::new(instance)));
 
-        let mut instance = arena[assigned].lock().await;
+        let mut instance = arena[assigned].write().await;
         instance._base_mut().arena_id.set(assigned).unwrap();
         drop(instance);
 
@@ -57,6 +57,10 @@ impl Instance {
 /// Source: https://create.roblox.com/docs/reference/engine/classes/Instance
 #[async_trait]
 pub trait InstanceType: 'static + Send + Sync {
+    fn arena_id(&self) -> InstanceRef {
+        *self._base().arena_id.get().unwrap()
+    }
+
     /// A low level way to get the base instance.
     #[doc(hidden)]
     fn _base(&self) -> &BaseInstance;
@@ -75,7 +79,7 @@ pub trait InstanceType: 'static + Send + Sync {
         let arena = arena.read().await;
         let children = &mut self._base_mut().children;
         for child in children.iter() {
-            let mut child = arena[*child].lock().await;
+            let mut child = arena[*child].write().await;
             child._base_mut().parent = None;
         }
         children.clear();
@@ -101,7 +105,7 @@ pub trait InstanceType: 'static + Send + Sync {
         let children = &mut self._base_mut().children;
         for child in children.iter() {
             let arena_ref = arena.read().await;
-            let mut child = arena_ref[*child].lock().await;
+            let mut child = arena_ref[*child].write().await;
             println!("RACE CONDITION #1");
             child.destroy(arena.clone()).await;
             println!("RACE CONDITION #1 done");
@@ -118,11 +122,31 @@ pub trait InstanceType: 'static + Send + Sync {
         self._base_mut().name = name;
     }
 
-    async fn set_parent(&mut self, parent: prelude::InstanceRef, arena: InstanceArena) {
-        self._base_mut().parent = Some(parent);
+    async fn set_parent(&mut self, parent: Option<prelude::InstanceRef>, arena: InstanceArena) {
+        println!("Reading from old parent");
+        if let Some(old_parent) = self._base().parent {
+            let old_parent = &arena.read().await[old_parent];
+            let arena_id = *self._base().arena_id.get().unwrap();
 
-        let parent = &arena.read().await[parent];
-        parent.lock().await._base_mut().children.push(*self._base().arena_id.get().unwrap());
+            let mut old_parent = old_parent.write().await;
+            let children = &mut old_parent._base_mut().children;
+            let index = children.iter().position(|x| *x == arena_id).unwrap();
+
+            children.remove(index);
+        }
+        self._base_mut().parent = parent;
+
+        println!("Reading from parent value");
+        if let Some(parent) = parent {
+            println!("Accessing arena");
+            let parent = &arena.read().await[parent];
+            println!("Accessing its parent");
+            parent.write().await._base_mut().children.push(*self._base().arena_id.get().unwrap());
+        }
+    }
+
+    fn parent(&self) -> Option<InstanceRef> {
+        self._base().parent
     }
 }
 

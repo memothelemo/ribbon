@@ -39,8 +39,8 @@ impl InstanceType for Part {
         let base_part = BasePart::clone(&self.base_part, arena.clone()).await?;
 
         let mut arena = arena.write().await;
-        let instance = arena.alloc(Arc::new(Mutex::new(Self { base_part })));
-        arena[instance].lock().await._base_mut().arena_id.set(instance).unwrap();
+        let instance = arena.alloc(Arc::new(RwLock::new(Self { base_part })));
+        arena[instance].write().await._base_mut().arena_id.set(instance).unwrap();
 
         Ok(instance)
     }
