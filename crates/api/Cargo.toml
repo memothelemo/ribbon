@@ -3,12 +3,7 @@ name = "ribbon_api"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-async = []
-
 [dependencies]
-async-trait = "0.1.58"
 id-arena = "2.2.1"
 once_cell = "1.15.0"
 rbx_types = { git = "https://github.com/memothelemo/rbx-dom.git" }
-tokio = { version = "1.21.2", features = ["sync"] }
