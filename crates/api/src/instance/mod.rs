@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 
 use self::internal::CreatableInstance;
 
-pub fn downcast_ref<T: Any>(instance: &dyn InstanceType) -> Option<&T> {
+pub(crate) fn downcast_ref<T: Any>(instance: &dyn InstanceType) -> Option<&T> {
     let t = TypeId::of::<T>();
     let concrete = instance.type_id();
     if t == concrete {

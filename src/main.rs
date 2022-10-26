@@ -1,6 +1,6 @@
 use ribbon_api::instance::prelude::*;
 
-fn main() {
+fn memory_check() {
     // Run `bash memchk.sh` to check for memory leaks, linux only
     let mut instance = Instance::new::<Part>(None);
     let mut instance_2 = Instance::new::<Part>(None);
@@ -23,6 +23,13 @@ fn main() {
     dbg!(instance_3.get().base());
     dbg!(instance_4.get().base());
     dbg!(instance_5.get().base());
+}
+
+fn main() {
+    memory_check();
+
+    let mut instance = Instance::new::<Part>(None);
+    println!("{}", instance.cast::<Part>().unwrap().locked());
 }
 // use std::time::Instant;
 

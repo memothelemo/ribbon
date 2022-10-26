@@ -1,5 +1,4 @@
 use crate::instance::prelude::*;
-use once_cell::sync::OnceCell;
 use rbx_types::Ref;
 
 #[derive(Debug)]
@@ -12,7 +11,7 @@ pub struct BaseInstance {
 }
 
 impl BaseInstance {
-    pub(crate) fn new(name: &'static str) -> BaseInstance {
+    pub(crate) fn new(name: &'static str) -> Self {
         Self {
             id: Ref::new(),
             children: Vec::new(),
@@ -26,6 +25,8 @@ pub trait InstanceType: Sealed + BaseInstanceGetter + std::any::Any {
     fn id(&self) -> Ref {
         self.base().id
     }
+
+    fn class_name(&self) -> &'static str;
 
     fn name(&self) -> &str {
         &self.base().name

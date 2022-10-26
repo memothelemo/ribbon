@@ -1,4 +1,13 @@
-pub use super::{base::*, downcast_ref, pv::base_part::part::*, Instance};
+pub use super::{
+    base::*,
+    pv::{
+        base_part::{part::*, *},
+        *,
+    },
+    Instance,
+};
 
-pub(crate) use super::internal::{BaseInstanceGetter, CreatableInstance, Sealed};
-pub(crate) use super::{AnyInstance, UnsafeInstancePtr};
+pub(crate) use super::internal::*;
+pub(crate) use super::{downcast_ref, AnyInstance, UnsafeInstancePtr};
+
+pub(crate) use rbx_types::*;
