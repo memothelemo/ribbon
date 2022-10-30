@@ -1,10 +1,9 @@
-use super::internal::{BaseInstanceGetter, Sealed};
-use super::Instance;
-
 use crate::instance::prelude::*;
+use rbx_types::Ref;
 
 #[derive(Debug)]
 pub struct BaseInstance {
+    // This is sort of required soon...
     pub(crate) id: Ref,
     pub(crate) name: String,
     pub(crate) children: Vec<Instance>,
@@ -22,7 +21,7 @@ impl BaseInstance {
     }
 }
 
-pub trait InstanceType: Sealed + BaseInstanceGetter + std::any::Any + std::fmt::Debug {
+pub trait InstanceType: Sealed + BaseInstanceGetter + mlua::UserData + std::any::Any {
     fn id(&self) -> Ref {
         self.base().id
     }

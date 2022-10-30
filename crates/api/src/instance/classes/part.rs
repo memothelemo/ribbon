@@ -5,6 +5,8 @@ pub struct Part {
     base: BasePart,
 }
 
+pub trait PartType: BasePartType + PartGetter {}
+
 impl Sealed for Part {}
 impl BaseInstanceGetter for Part {
     fn base(&self) -> &BaseInstance {
@@ -51,3 +53,15 @@ impl InstanceType for Part {
         "Part"
     }
 }
+
+impl PartGetter for Part {
+    fn part(&self) -> &Part {
+        self
+    }
+
+    fn part_mut(&mut self) -> &mut Part {
+        self
+    }
+}
+
+impl PartType for Part {}

@@ -1,145 +1,109 @@
-pub mod prelude;
-
-pub mod base;
-pub mod pv;
-
-pub(crate) mod internal;
-
-use base::InstanceType;
-
-use std::any::{Any, TypeId};
+use crate::instance::prelude::*;
 use std::ptr::NonNull;
-use std::sync::{Arc, Mutex};
 
-use self::internal::CreatableInstance;
+mod base;
+mod classes;
+mod internal;
 
-pub(crate) fn downcast_ref<T: Any>(instance: &dyn InstanceType) -> Option<&T> {
-    let t = TypeId::of::<T>();
-    let concrete = instance.type_id();
-    if t == concrete {
-        // SAFETY: caller guarantees that T is the correct type
-        Some(unsafe { &*(instance as *const dyn Any as *const T) })
-    } else {
-        None
-    }
-}
-
-pub type AnyInstance = dyn InstanceType + 'static;
-pub type UnsafeInstancePtr = NonNull<AnyInstance>;
+pub mod prelude;
+pub use base::*;
 
 #[derive(Debug)]
 pub struct Instance {
-    refs: Arc<Mutex<usize>>,
-    pub(crate) ptr: UnsafeInstancePtr,
+    refs: *mut usize,
+
+    /// Pointer points to any Instance object.
+    ///
+    /// ## Safety
+    /// The value inside this ptr is InstanceType.
+    /// We're going to safely cast it and do something
+    /// with it dangerously. :)
+    pub(crate) ptr: NonNull<libc::c_void>,
+    pub(crate) size: usize,
 }
 
 impl Clone for Instance {
     fn clone(&self) -> Self {
-        let mut mutex = self.refs.lock().unwrap();
-        let new_size = *mutex + 1;
-        if new_size > isize::MAX as usize {
-            std::process::abort();
-        }
-        *mutex = new_size;
-        drop(mutex);
+        unsafe {
+            let refs = self.refs;
+            let new_size = *refs + 1;
+            if new_size > isize::MAX as usize {
+                std::process::abort();
+            }
+            *refs = new_size;
 
-        Self {
-            refs: self.refs.clone(),
-            ptr: self.ptr,
+            Self {
+                refs: self.refs,
+                ptr: self.ptr,
+                size: self.size,
+            }
         }
     }
 }
 
 impl Instance {
-    fn from_trait(instance: impl InstanceType) -> Self {
+    pub(crate) fn from_trait(instance: impl InstanceType) -> Self {
+        let size = unsafe { std::mem::size_of_val_raw(&instance) };
+
         let value = Box::leak(Box::new(instance));
+        let refs = Box::leak(Box::new(0));
+
+        let ptr = NonNull::new(value).unwrap();
+        let ptr = ptr.as_ptr() as *mut libc::c_void;
+
         Self {
-            refs: Arc::new(Mutex::new(1)),
-            ptr: NonNull::new(value).unwrap(),
+            refs,
+            ptr: NonNull::new(ptr).unwrap(),
+            size,
         }
     }
 
-    fn clone_unsafe(&self) -> Self {
+    pub(crate) unsafe fn clone_unsafe(&self) -> Self {
         Self {
-            refs: self.refs.clone(),
+            refs: self.refs,
             ptr: self.ptr,
+            size: self.size,
         }
     }
 }
 
-impl std::ops::Deref for Instance {
-    type Target = dyn InstanceType + 'static;
-
-    fn deref(&self) -> &Self::Target {
-        unsafe { self.ptr.as_ref() }
-    }
-}
-
-impl std::ops::DerefMut for Instance {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { self.ptr.as_mut() }
-    }
-}
-
 impl Instance {
-    pub fn clear_parent(mut instance: Instance) {
-        let ptr = instance.ptr;
-        let base = instance.get_mut();
-        if let Some(mut old_parent) = base.base_mut().parent.take() {
-            let old_parent = old_parent.get_mut();
-            let position = old_parent
-                .children()
-                .iter()
-                .position(|v| v.ptr == ptr)
-                .expect("my child is gone!");
-
-            old_parent.base_mut().children.remove(position);
-        }
-    }
-
-    pub fn set_parent(instance: &mut Instance, parent: &mut Instance) {
-        // clearing out the old parent
-        Self::clear_parent(instance.clone());
-        let instance_ref = instance.get_mut();
-        instance_ref.base_mut().parent = Some(parent.clone_unsafe());
-
-        let new_parent = parent.get_mut();
-        new_parent.base_mut().children.push(instance.clone());
-    }
-}
-
-impl Instance {
+    #[must_use]
     pub fn new<T: CreatableInstance>(parent: Option<Instance>) -> Instance {
         T::create(parent)
     }
 
-    pub unsafe fn ptr(&self) -> *mut AnyInstance {
-        self.ptr.as_ptr()
-    }
-
+    // #[must_use]
     pub fn get(&self) -> &dyn InstanceType {
-        unsafe { self.ptr.as_ref() }
+        unsafe {
+            let ptr = self.ptr.as_ptr();
+
+            // treat it as a slice right now
+            let array = std::slice::from_raw_parts(ptr as *mut u8, self.size);
+            std::mem::transmute::<_, &dyn InstanceType>(array)
+            // println!("{}", instance.name());
+            // instance
+        }
     }
 
-    pub fn get_mut(&mut self) -> &mut dyn InstanceType {
-        unsafe { self.ptr.as_mut() }
-    }
-
-    pub fn cast<T: InstanceType>(&self) -> Option<&T> {
-        downcast_ref::<T>(self.get())
+    #[must_use]
+    pub fn get_mut<T: InstanceType>(&mut self) -> &mut T {
+        unsafe { &mut *(self.ptr.as_ptr().cast::<T>()) }
     }
 }
 
 impl Drop for Instance {
     fn drop(&mut self) {
-        let refs = *self.refs.lock().unwrap();
-        let new_refs = refs.saturating_sub(1);
-
-        *self.refs.lock().unwrap() = new_refs;
-        println!(
-            "Dropping instance ({:?}): {} -> {}",
-            self.ptr, refs, new_refs
-        );
+        let refs = unsafe {
+            let refs = *self.refs.as_ref().unwrap();
+            let new_refs = refs.saturating_sub(1);
+            println!(
+                "Dropping instance ({:?}): {} -> {}",
+                self.ptr, refs, new_refs
+            );
+            *self.refs.as_mut().unwrap() = new_refs;
+            refs
+        };
         if refs != 1 {
             return;
         }
@@ -150,9 +114,14 @@ impl Drop for Instance {
         // don't worry about the parent, the children will eventually
         // be dropped and prevent from serious memory problems later on
         unsafe {
-            for child in self.get_mut().base_mut().children.drain(..) {
-                drop(child);
-            }
+            // for child in self
+            //     .get_mut::<dyn InstanceType>()
+            //     .base_mut()
+            //     .children
+            //     .drain(..)
+            // {
+            //     drop(child);
+            // }
             drop(Box::from_raw(self.ptr.as_ptr()));
         }
     }

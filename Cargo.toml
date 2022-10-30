@@ -1,3 +1,6 @@
+[workspace]
+members = ["./crates/*"]
+
 [package]
 name = "ribbon"
 version = "0.1.0"
@@ -6,5 +9,5 @@ license = "GPL-3.0"
 authors = ["memothelemo <memothelemo@protonmail.com>"]
 
 [dependencies]
-ribbon_api = { path = "./crates/api" }
+ribbon-api = { path = "./crates/api" }
 tokio = { version = "1.21.2", features = ["full"] }

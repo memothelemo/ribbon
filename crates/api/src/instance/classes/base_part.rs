@@ -1,6 +1,5 @@
+use crate::instance::internal::BasePartGetter;
 use crate::instance::prelude::*;
-
-pub mod part;
 
 #[derive(Debug)]
 pub struct BasePart {
@@ -89,6 +88,37 @@ impl BasePart {
             transparency: 0.,
         }
     }
+
+    // pub(crate) fn impl_fields<'lua, T: UserData + BasePartType, F: UserDataFields<'lua, T>>(
+    //     fields: &mut F,
+    // ) {
+    //     PVInstance::impl_fields(fields);
+
+    //     fields.add_field_method_get("Anchored", |_lua, this| Ok(this.anchored()));
+    //     fields.add_field_method_get("AssemblyMass", |_lua, this| Ok(this.assembly_mass()));
+
+    //     fields.add_field_method_get("CanCollide", |_lua, this| Ok(this.can_collide()));
+    //     fields.add_field_method_get("CanQuery", |_lua, this| Ok(this.can_query()));
+    //     fields.add_field_method_get("CanTouch", |_lua, this| Ok(this.can_touch()));
+
+    //     fields.add_field_method_get("CollisionGroupId", |_lua, this| {
+    //         Ok(this.collision_group_id())
+    //     });
+
+    //     fields.add_field_method_get("Locked", |_lua, this| Ok(this.locked()));
+    //     fields.add_field_method_get("Mass", |_lua, this| Ok(this.mass()));
+    //     fields.add_field_method_get("Massless", |_lua, this| Ok(this.massless()));
+    //     fields.add_field_method_get("MaterialVariant", |lua, this| {
+    //         lua.create_string(this.material_variant())
+    //     });
+
+    //     fields.add_field_method_get("Reflectance", |_lua, this| Ok(this.reflectance()));
+    //     fields.add_field_method_get("ResizeIncrement", |_lua, this| Ok(this.resize_increment()));
+
+    //     fields.add_field_method_get("RootPriority", |_lua, this| Ok(this.root_priority()));
+
+    //     fields.add_field_method_get("Transparency", |_lua, this| Ok(this.transparency()));
+    // }
 }
 
 pub trait BasePartType: PVInstanceType + BasePartGetter {
