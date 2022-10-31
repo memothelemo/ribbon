@@ -1,3 +1,5 @@
+use mlua::ToLua;
+
 use super::internal::{BaseInstanceGetter, Sealed};
 use super::Instance;
 
@@ -23,11 +25,56 @@ impl BaseInstance {
 }
 
 pub trait InstanceType: Sealed + BaseInstanceGetter + std::any::Any + std::fmt::Debug {
+    fn _lua_get_property<'lua>(
+        &self,
+        _lua: &'lua mlua::Lua,
+        _name: &str,
+    ) -> mlua::Result<Option<mlua::Value<'lua>>> {
+        Ok(None)
+    }
+
+    fn _lua_meta_index<'lua>(
+        &self,
+        lua: &'lua mlua::Lua,
+        key: &str,
+    ) -> mlua::Result<mlua::Value<'lua>> {
+        match key {
+            "Name" => self.name().to_lua(lua),
+            "ClassName" => self.class_name().to_lua(lua),
+
+            // Getting an unknown key falls back to properties, then children.
+            _ => {
+                if let Some(value) = self._lua_get_property(lua, key)? {
+                    return Ok(value);
+                }
+                if let Some(child) = self.find_first_child(key) {
+                    return child.to_lua(lua);
+                }
+                Err(mlua::Error::external(format!(
+                    "'{}' is not a valid member of {}",
+                    key,
+                    self.class_name()
+                )))
+            }
+        }
+    }
+
     fn id(&self) -> Ref {
         self.base().id
     }
 
+    fn children(&self) -> &[Instance] {
+        &self.base().children
+    }
+
     fn class_name(&self) -> &'static str;
+
+    fn find_first_child(&self, name: &str) -> Option<Instance> {
+        self.children()
+            .iter()
+            .find(|inst| inst.get().name() == name)
+            .cloned()
+    }
 
     fn name(&self) -> &str {
         &self.base().name
@@ -35,10 +82,6 @@ pub trait InstanceType: Sealed + BaseInstanceGetter + std::any::Any + std::fmt::
 
     fn name_mut(&mut self) -> &mut String {
         &mut self.base_mut().name
-    }
-
-    fn children(&self) -> &[Instance] {
-        &self.base().children
     }
 
     fn parent(&self) -> Option<Instance> {

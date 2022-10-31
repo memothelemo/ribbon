@@ -1,10 +1,7 @@
 use ribbon_api::instance::prelude::*;
 
 fn main() {
-    println!("allocating instance");
-    let mut instance = Instance::new::<Part>(None);
-    println!("getting reference");
-    println!("{:#?}", (instance.get()).name());
+    ribbon_api::test();
 }
 
 // use ribbon_api::instance::prelude::*;

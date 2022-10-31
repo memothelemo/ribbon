@@ -1,4 +1,5 @@
 use crate::instance::prelude::*;
+use mlua::MetaMethod;
 use std::ptr::NonNull;
 
 mod base;
@@ -6,63 +7,27 @@ mod classes;
 mod internal;
 
 pub mod prelude;
-pub use base::*;
+pub use self::base::*;
 
 #[derive(Debug)]
 pub struct Instance {
     refs: *mut usize,
-
-    /// Pointer points to any Instance object.
-    ///
-    /// ## Safety
-    /// The value inside this ptr is InstanceType.
-    /// We're going to safely cast it and do something
-    /// with it dangerously. :)
-    pub(crate) ptr: NonNull<libc::c_void>,
-    pub(crate) size: usize,
-}
-
-impl Clone for Instance {
-    fn clone(&self) -> Self {
-        unsafe {
-            let refs = self.refs;
-            let new_size = *refs + 1;
-            if new_size > isize::MAX as usize {
-                std::process::abort();
-            }
-            *refs = new_size;
-
-            Self {
-                refs: self.refs,
-                ptr: self.ptr,
-                size: self.size,
-            }
-        }
-    }
+    pub(crate) ptr: NonNull<dyn InstanceType>,
 }
 
 impl Instance {
     pub(crate) fn from_trait(instance: impl InstanceType) -> Self {
-        let size = unsafe { std::mem::size_of_val_raw(&instance) };
-
         let value = Box::leak(Box::new(instance));
-        let refs = Box::leak(Box::new(0));
-
+        let refs = Box::leak(Box::new(1));
         let ptr = NonNull::new(value).unwrap();
-        let ptr = ptr.as_ptr() as *mut libc::c_void;
 
-        Self {
-            refs,
-            ptr: NonNull::new(ptr).unwrap(),
-            size,
-        }
+        Self { refs, ptr }
     }
 
     pub(crate) unsafe fn clone_unsafe(&self) -> Self {
         Self {
             refs: self.refs,
             ptr: self.ptr,
-            size: self.size,
         }
     }
 }
@@ -73,22 +38,22 @@ impl Instance {
         T::create(parent)
     }
 
-    // #[must_use]
+    #[must_use]
     pub fn get(&self) -> &dyn InstanceType {
-        unsafe {
-            let ptr = self.ptr.as_ptr();
-
-            // treat it as a slice right now
-            let array = std::slice::from_raw_parts(ptr as *mut u8, self.size);
-            std::mem::transmute::<_, &dyn InstanceType>(array)
-            // println!("{}", instance.name());
-            // instance
-        }
+        unsafe { self.ptr.as_ref() }
     }
 
     #[must_use]
-    pub fn get_mut<T: InstanceType>(&mut self) -> &mut T {
-        unsafe { &mut *(self.ptr.as_ptr().cast::<T>()) }
+    pub fn get_mut(&mut self) -> &mut dyn InstanceType {
+        unsafe { self.ptr.as_mut() }
+    }
+}
+
+impl mlua::UserData for Instance {
+    fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_meta_method(MetaMethod::Index, |lua, this, key: String| {
+            this.get()._lua_meta_index(lua, &key)
+        });
     }
 }
 
@@ -114,15 +79,29 @@ impl Drop for Instance {
         // don't worry about the parent, the children will eventually
         // be dropped and prevent from serious memory problems later on
         unsafe {
-            // for child in self
-            //     .get_mut::<dyn InstanceType>()
-            //     .base_mut()
-            //     .children
-            //     .drain(..)
-            // {
-            //     drop(child);
-            // }
+            for child in self.get_mut().base_mut().children.drain(..) {
+                drop(child);
+            }
             drop(Box::from_raw(self.ptr.as_ptr()));
+            drop(Box::from_raw(self.refs));
+        }
+    }
+}
+
+impl Clone for Instance {
+    fn clone(&self) -> Self {
+        unsafe {
+            let refs = self.refs;
+            let new_size = *refs + 1;
+            if new_size > isize::MAX as usize {
+                std::process::abort();
+            }
+            *refs = new_size;
+
+            Self {
+                refs: self.refs,
+                ptr: self.ptr,
+            }
         }
     }
 }
