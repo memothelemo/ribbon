@@ -1,5 +1,3 @@
-use ribbon_api::instance::prelude::*;
-
 fn main() {
     ribbon_api::test();
 }

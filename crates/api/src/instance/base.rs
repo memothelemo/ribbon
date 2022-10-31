@@ -33,6 +33,29 @@ pub trait InstanceType: Sealed + BaseInstanceGetter + std::any::Any + std::fmt::
         Ok(None)
     }
 
+    fn _lua_meta_new_index<'lua>(
+        &mut self,
+        _lua: &'lua mlua::Lua,
+        key: &str,
+        value: mlua::Value<'lua>,
+    ) -> mlua::Result<()> {
+        match key {
+            "ClassName" => Err(mlua::Error::external("Instance.ClassName is read-only")),
+            "Name" => match value {
+                mlua::Value::String(str) => {
+                    self.base_mut().name = str.to_str()?.to_string();
+                    Ok(())
+                }
+                _ => Err(mlua::Error::external("Instance.Name must be a string")),
+            },
+            _ => Err(mlua::Error::external(format!(
+                "'{}' is not a valid member of {}",
+                key,
+                self.class_name()
+            ))),
+        }
+    }
+
     fn _lua_meta_index<'lua>(
         &self,
         lua: &'lua mlua::Lua,
@@ -41,6 +64,7 @@ pub trait InstanceType: Sealed + BaseInstanceGetter + std::any::Any + std::fmt::
         match key {
             "Name" => self.name().to_lua(lua),
             "ClassName" => self.class_name().to_lua(lua),
+            "Parent" => self.parent().to_lua(lua),
 
             // Getting an unknown key falls back to properties, then children.
             _ => {

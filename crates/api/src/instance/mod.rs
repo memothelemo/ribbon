@@ -9,10 +9,57 @@ mod internal;
 pub mod prelude;
 pub use self::base::*;
 
+pub struct InstanceBuilder;
+
+impl mlua::UserData for InstanceBuilder {
+    fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_function(
+            "new",
+            |_lua, (class_name, parent): (String, Option<Instance>)| match class_name.as_str() {
+                "Part" => Ok(Instance::new::<Part>(parent)),
+                _ => Err(mlua::Error::external(format!(
+                    "'{}' is not a valid class of Instance",
+                    class_name
+                ))),
+            },
+        );
+    }
+}
+
 #[derive(Debug)]
 pub struct Instance {
     refs: *mut usize,
     pub(crate) ptr: NonNull<dyn InstanceType>,
+}
+
+impl Instance {
+    pub fn clear_parent(instance: &mut Self) {
+        let base = instance.get_mut();
+        let its_id = base.id();
+        if let Some(mut parent) = base.parent() {
+            let parent = parent.get_mut();
+            let position = parent
+                .children()
+                .iter()
+                .position(|v| v.get().id() == its_id)
+                .expect("Oh my no! My child is gone!");
+
+            parent.base_mut().children.remove(position);
+        }
+    }
+
+    pub fn set_parent(instance: &mut Self, mut parent: Instance) {
+        // clear out the old parent
+        Self::clear_parent(instance);
+
+        unsafe {
+            let instance_deref = instance.get_mut();
+            instance_deref.base_mut().parent = Some(parent.clone_unsafe());
+
+            let new_parent = parent.get_mut();
+            new_parent.base_mut().children.push(instance.clone());
+        };
+    }
 }
 
 impl Instance {
@@ -35,7 +82,11 @@ impl Instance {
 impl Instance {
     #[must_use]
     pub fn new<T: CreatableInstance>(parent: Option<Instance>) -> Instance {
-        T::create(parent)
+        let mut instance = T::create(parent.clone());
+        if let Some(parent) = parent {
+            Self::set_parent(&mut instance, parent);
+        }
+        instance
     }
 
     #[must_use]
@@ -54,6 +105,16 @@ impl mlua::UserData for Instance {
         methods.add_meta_method(MetaMethod::Index, |lua, this, key: String| {
             this.get()._lua_meta_index(lua, &key)
         });
+
+        methods.add_meta_method(
+            MetaMethod::NewIndex,
+            |lua, this, (key, value): (String, mlua::Value)| {
+                // SAFETY: We have no choice but to unsafely
+                // reference the inner value because the way mlua
+                // implements it anyway...
+                unsafe { (*this.ptr.as_ptr())._lua_meta_new_index(lua, &key, value) }
+            },
+        );
     }
 }
 
