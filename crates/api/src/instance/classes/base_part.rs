@@ -121,6 +121,59 @@ impl BasePart {
     // }
 }
 
+impl BasePart {
+    pub(crate) fn lua_get_property<'lua>(
+        &self,
+        lua: &'lua mlua::Lua,
+        name: &str,
+    ) -> mlua::Result<Option<mlua::Value<'lua>>> {
+        use mlua::ToLua;
+        match name {
+            "Anchored" => Ok(Some(self.anchored.to_lua(lua)?)),
+            "AssemblyMass" => Ok(Some(self.assembly_mass.to_lua(lua)?)),
+
+            "CanCollide" => Ok(Some(self.can_collide.to_lua(lua)?)),
+            "CanQuery" => Ok(Some(self.can_query.to_lua(lua)?)),
+            "CanTouch" => Ok(Some(self.can_touch.to_lua(lua)?)),
+
+            "CollisionGroupId" => Ok(Some(self.collision_group_id.to_lua(lua)?)),
+
+            "Locked" => Ok(Some(self.locked.to_lua(lua)?)),
+            "Mass" => Ok(Some(self.mass.to_lua(lua)?)),
+            "Massless" => Ok(Some(self.massless.to_lua(lua)?)),
+            "MaterialVariant" => Ok(Some(self.material_variant.clone().to_lua(lua)?)),
+
+            "Position" => Ok(Some(self.position.to_lua(lua)?)),
+
+            "Reflectance" => Ok(Some(self.reflectance.to_lua(lua)?)),
+            "ResizeIncrement" => Ok(Some(self.resize_increment.to_lua(lua)?)),
+
+            "RootPriority" => Ok(Some(self.root_priority.to_lua(lua)?)),
+
+            "Transparency" => Ok(Some(self.transparency.to_lua(lua)?)),
+
+            _ => PVInstance::lua_get_property(&self.pv, lua, name),
+        }
+    }
+}
+
+impl Sealed for BasePart {}
+impl BaseInstanceGetter for BasePart {
+    fn base(&self) -> &BaseInstance {
+        &self.pv.base
+    }
+
+    fn base_mut(&mut self) -> &mut crate::instance::prelude::BaseInstance {
+        &mut self.pv.base
+    }
+}
+
+impl InstanceType for BasePart {
+    fn class_name(&self) -> &'static str {
+        "BasePart"
+    }
+}
+
 pub trait BasePartType: PVInstanceType + BasePartGetter {
     fn anchored(&self) -> bool {
         self.base_part().anchored

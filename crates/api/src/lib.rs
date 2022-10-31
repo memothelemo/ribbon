@@ -1,39 +1,24 @@
 #![allow(incomplete_features, trivial_bounds)]
 
+use std::time::Instant;
+
+pub mod ctors;
 pub mod instance;
 
 pub fn test() {
-    use instance::prelude::*;
     use mlua::Lua;
 
     let lua = Lua::new();
     let globals = lua.globals();
-    globals.set("Instance", InstanceBuilder).unwrap();
+    globals.set("Instance", ctors::InstanceBuilder).unwrap();
+    globals.set("Vector3", ctors::Vector3Builder).unwrap();
 
-    lua.load(
-        r#"
-    local part = Instance.new("Part")
-    part.Name = "Foo"
-    print(part.Name)
+    let binding = std::fs::read_to_string("test/my_script.lua").unwrap();
+    let chunk = lua.load(&binding).set_name("test/my_script.lua").unwrap();
 
-    local parento = Instance.new("Part", part)
-    _G.parento = parento
-    "#,
-    )
-    .exec()
-    .map_err(|e| eprintln!("{e}"))
-    .unwrap();
+    let now = Instant::now();
+    chunk.exec().map_err(|e| eprintln!("{e}")).unwrap();
 
-    let globals = lua.globals();
-    let inst = globals.get::<&str, Instance>("parento").unwrap();
-    println!("{:#?}", inst.get());
-
-    lua.load(
-        r#"
-    parento.Name = "ParentoBar"
-    assert(parento.Parent.Name, "Foo")"#,
-    )
-    .exec()
-    .map_err(|e| println!("{e}"))
-    .unwrap();
+    let elapsed = now.elapsed();
+    println!("Took {:.2?}", elapsed);
 }

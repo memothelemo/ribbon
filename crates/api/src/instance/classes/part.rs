@@ -5,6 +5,16 @@ pub struct Part {
     base: BasePart,
 }
 
+impl Part {
+    pub(crate) fn lua_get_property<'lua>(
+        &self,
+        lua: &'lua mlua::Lua,
+        name: &str,
+    ) -> mlua::Result<Option<mlua::Value<'lua>>> {
+        BasePart::lua_get_property(&self.base, lua, name)
+    }
+}
+
 pub trait PartType: BasePartType + PartGetter {}
 
 impl Sealed for Part {}
@@ -49,6 +59,14 @@ impl BasePartGetter for Part {
 impl BasePartType for Part {}
 
 impl InstanceType for Part {
+    fn _lua_get_property<'lua>(
+        &self,
+        lua: &'lua mlua::Lua,
+        name: &str,
+    ) -> mlua::Result<Option<mlua::Value<'lua>>> {
+        Self::lua_get_property(&self, lua, name)
+    }
+
     fn class_name(&self) -> &'static str {
         "Part"
     }

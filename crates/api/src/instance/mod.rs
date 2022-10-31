@@ -1,5 +1,5 @@
 use crate::instance::prelude::*;
-use mlua::MetaMethod;
+use mlua::{MetaMethod, ToLua};
 use std::ptr::NonNull;
 
 mod base;
@@ -8,23 +8,6 @@ mod internal;
 
 pub mod prelude;
 pub use self::base::*;
-
-pub struct InstanceBuilder;
-
-impl mlua::UserData for InstanceBuilder {
-    fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_function(
-            "new",
-            |_lua, (class_name, parent): (String, Option<Instance>)| match class_name.as_str() {
-                "Part" => Ok(Instance::new::<Part>(parent)),
-                _ => Err(mlua::Error::external(format!(
-                    "'{}' is not a valid class of Instance",
-                    class_name
-                ))),
-            },
-        );
-    }
-}
 
 #[derive(Debug)]
 pub struct Instance {
@@ -102,6 +85,10 @@ impl Instance {
 
 impl mlua::UserData for Instance {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_method("GetChildren", |lua, this, _: ()| {
+            Ok(this.get().children().to_lua(lua))
+        });
+
         methods.add_meta_method(MetaMethod::Index, |lua, this, key: String| {
             this.get()._lua_meta_index(lua, &key)
         });
@@ -123,17 +110,17 @@ impl Drop for Instance {
         let refs = unsafe {
             let refs = *self.refs.as_ref().unwrap();
             let new_refs = refs.saturating_sub(1);
-            println!(
-                "Dropping instance ({:?}): {} -> {}",
-                self.ptr, refs, new_refs
-            );
+            // println!(
+            //     "Dropping instance ({:?}): {} -> {}",
+            //     self.ptr, refs, new_refs
+            // );
             *self.refs.as_mut().unwrap() = new_refs;
             refs
         };
         if refs != 1 {
             return;
         }
-        println!("Performing drop from: {:#?}", self.ptr);
+        //println!("Performing drop from: {:#?}", self.ptr);
 
         // drop also the children of our family
         //

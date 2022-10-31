@@ -33,6 +33,19 @@ pub trait InstanceType: Sealed + BaseInstanceGetter + std::any::Any + std::fmt::
         Ok(None)
     }
 
+    fn _lua_set_property<'lua>(
+        &self,
+        _lua: &'lua mlua::Lua,
+        _name: &str,
+        _value: mlua::Value<'lua>,
+    ) -> mlua::Result<()> {
+        Err(mlua::Error::external(format!(
+            "'{}' is not a valid member of {}",
+            _name,
+            self.class_name()
+        )))
+    }
+
     fn _lua_meta_new_index<'lua>(
         &mut self,
         _lua: &'lua mlua::Lua,
@@ -48,11 +61,7 @@ pub trait InstanceType: Sealed + BaseInstanceGetter + std::any::Any + std::fmt::
                 }
                 _ => Err(mlua::Error::external("Instance.Name must be a string")),
             },
-            _ => Err(mlua::Error::external(format!(
-                "'{}' is not a valid member of {}",
-                key,
-                self.class_name()
-            ))),
+            _ => self._lua_set_property(_lua, key, value),
         }
     }
 

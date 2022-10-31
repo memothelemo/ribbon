@@ -8,4 +8,4 @@ libc = "0.2.136"
 id-arena = "2.2.1"
 once_cell = "1.15.0"
 mlua = { version = "0.8.4", features = ["luau", "vendored"] }
-rbx_types = { git = "https://github.com/memothelemo/rbx-dom.git" }
+rbx_types = { git = "https://github.com/memothelemo/rbx-dom.git", features = ["mlua", "luau_impl"] }

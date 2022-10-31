@@ -19,6 +19,21 @@ impl PVInstance {
             pivot_origin_position: Vector3::default(),
         }
     }
+
+    pub(crate) fn lua_get_property<'lua>(
+        &self,
+        lua: &'lua mlua::Lua,
+        name: &str,
+    ) -> mlua::Result<Option<mlua::Value<'lua>>> {
+        use mlua::ToLua;
+        match name {
+            "Origin Orientation" => Ok(Some(self.origin_orientation.to_lua(lua)?)),
+            "Origin Position" => Ok(Some(self.origin_position.to_lua(lua)?)),
+            "Pivot Origin Orientation" => Ok(Some(self.pivot_origin_orientation.to_lua(lua)?)),
+            "Pivot Origin Position" => Ok(Some(self.pivot_origin_position.to_lua(lua)?)),
+            _ => Ok(None),
+        }
+    }
 }
 
 pub trait PVInstanceType: PVInstanceGetter + InstanceType {
