@@ -35,7 +35,7 @@ jobs:
       run: cargo build --locked --verbose
 
     - name: Test
-      run: cargo test --locked --verbose
+      run: cargo test --all --locked --verbose
 
   lint:
     name: Rustfmt and Clippy
