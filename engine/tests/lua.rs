@@ -40,80 +40,17 @@ pub mod prelude {
             globals.set("assert_eq", assert_eq)?;
 
             let assert_property = lua
-                .load(
-                    r#"return function(base, index, value)
-                    base[index] = value
-                    assert_eq(base[index], value)
-                end"#,
-                )
+                .load(include_str!("lua/assertProperty.lua"))
                 .eval::<LuaFunction>()?;
             globals.set("assert_property", assert_property)?;
 
             let deep_equals = lua
-                .load(
-                    r#"
-local function deepEqual(a: any, b: any)
-    if typeof(a) ~= typeof(b) then
-        return false
-    end
-
-    if typeof(a) == "table" then
-        local visitedKeys = {}
-
-        for key, value in pairs(a) do
-            visitedKeys[key] = true
-
-            local success = deepEqual(value, b[key])
-            if not success then
-                return false
-            end
-        end
-
-        for key, value in pairs(b) do
-            if not visitedKeys[key] then
-                local success = deepEqual(value, a[key])
-                if not success then
-                    return false
-                end
-            end
-        end
-
-        return true
-    end
-
-    if a == b then
-        return true
-    end
-
-    return false
-end
-
-return deepEqual"#,
-                )
+                .load(include_str!("lua/deepEquals.lua"))
                 .eval::<LuaFunction>()?;
             globals.set("deepEquals", deep_equals)?;
 
             let create_instance_by_tree = lua
-                .load(
-                    r#"
-                return function(tree)
-                    local function createInner(tree)
-                        local instance = Instance.new(tree.ClassName)
-                        for index, value in pairs(tree) do
-                            if index ~= "ClassName" and index ~= "Children" then
-                                instance[index] = value
-                            end
-                        end
-                        for name, inner in pairs(tree.Children or {}) do
-                            inner.Name = name
-                            inner.Parent = instance
-                            createInner(inner)
-                        end
-                        return instance
-                    end
-                    return createInner(tree)
-                end"#,
-                )
+                .load(include_str!("lua/createInstanceTree.lua"))
                 .eval::<LuaFunction>()?;
             globals.set("createInstanceTree", create_instance_by_tree)?;
 
