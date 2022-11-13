@@ -17,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        rust_version: [nightly, nightly-2022-23-2022]
+        rust_version: [nightly, nightly-2022-02-23]
 
     steps:
     - uses: actions/checkout@v3
