@@ -1,11 +1,11 @@
 use super::prelude::*;
 
 #[derive(Debug)]
-pub struct ServiceProvider {
+pub struct ValueBase {
     pub(crate) base: BaseInstance,
 }
 
-impl ServiceProvider {
+impl ValueBase {
     pub(crate) fn new(name: &'static str, class: ClassName) -> Self {
         Self {
             base: BaseInstance::new(name, class),
@@ -13,22 +13,22 @@ impl ServiceProvider {
     }
 }
 
-impl DefaultClassName for ServiceProvider {
+impl DefaultClassName for ValueBase {
     fn default_class_name() -> ClassName {
-        ClassName::ServiceProvider
+        ClassName::ValueBase
     }
 }
 
-impl AnyInstance for ServiceProvider {
-    fn base(&self) -> &BaseInstance {
+impl AnyInstance for ValueBase {
+    fn base(&self) -> &super::BaseInstance {
         self.base.base()
     }
 
-    fn base_mut(&mut self) -> &mut BaseInstance {
+    fn base_mut(&mut self) -> &mut super::BaseInstance {
         self.base.base_mut()
     }
 }
 
-ribbon_oop::impl_castable!(ServiceProvider, {
+ribbon_oop::impl_castable!(ValueBase, {
     BaseInstance,
 });

@@ -1,31 +1,33 @@
 use super::prelude::*;
 
 #[derive(Debug)]
-pub struct DataModel {
-    pub(crate) base: ServiceProvider,
+pub struct Model {
+    pub(crate) base: PVInstance,
 }
 
-impl DataModel {
+impl Model {
     pub(crate) fn new(name: &'static str, class: ClassName) -> Self {
         Self {
-            base: ServiceProvider::new(name, class),
+            base: PVInstance::new(name, class),
         }
     }
 }
 
-impl CreatableInstance for DataModel {
+impl CreatableInstance for Model {
     fn create(_parent: Option<Instance>) -> Instance {
-        Instance::new_from_trait(Self::new("DataModel", ClassName::DataModel))
+        Instance::new_from_trait(Self {
+            base: PVInstance::new("Model", ClassName::Model),
+        })
     }
 }
 
-impl DefaultClassName for DataModel {
+impl DefaultClassName for Model {
     fn default_class_name() -> ClassName {
-        ClassName::DataModel
+        ClassName::Model
     }
 }
 
-impl AnyInstance for DataModel {
+impl AnyInstance for Model {
     fn base(&self) -> &BaseInstance {
         self.base.base()
     }
@@ -35,7 +37,7 @@ impl AnyInstance for DataModel {
     }
 }
 
-ribbon_oop::impl_castable!(DataModel, {
-    ServiceProvider,
+ribbon_oop::impl_castable!(Model, {
+    PVInstance,
     BaseInstance,
 });

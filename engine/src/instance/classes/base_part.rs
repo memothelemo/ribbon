@@ -1,51 +1,35 @@
-use super::PVInstance;
-
-use crate::instance::InstanceLuaImpl;
-use crate::types::Vector3;
+use super::prelude::*;
 
 #[derive(Debug)]
 pub struct BasePart {
-    pub pv: PVInstance,
-    pub position: Vector3,
+    pub(crate) base: PVInstance,
 }
 
 impl BasePart {
-    pub fn new(name: &'static str) -> Self {
+    pub(crate) fn new(name: &'static str, class: ClassName) -> Self {
         Self {
-            pv: PVInstance::new(name),
-            position: Vector3::new(0., 0., 0.),
+            base: PVInstance::new(name, class),
         }
     }
 }
 
-impl crate::private::Sealed for BasePart {}
-impl InstanceLuaImpl for BasePart {
-    fn _lua_get_property<'lua>(
-        &self,
-        lua: &'lua mlua::Lua,
-        key: &str,
-    ) -> mlua::Result<Option<mlua::Value<'lua>>> {
-        use mlua::ToLua;
-        match key {
-            "Position" => self.position.to_lua(lua).map(Some),
-            _ => PVInstance::_lua_get_property(&self.pv, lua, key),
-        }
-    }
-
-    fn _lua_set_property<'lua>(
-        &mut self,
-        lua: &'lua mlua::Lua,
-        key: &str,
-        value: mlua::Value<'lua>,
-    ) -> mlua::Result<Option<()>> {
-        use mlua::FromLua;
-        match key {
-            "Position" => {
-                let value = Vector3::from_lua(value, lua)?;
-                self.position = value;
-            }
-            _ => return PVInstance::_lua_set_property(&mut self.pv, lua, key, value),
-        }
-        Ok(Some(()))
+impl DefaultClassName for BasePart {
+    fn default_class_name() -> ClassName {
+        ClassName::BasePart
     }
 }
+
+impl AnyInstance for BasePart {
+    fn base(&self) -> &super::BaseInstance {
+        self.base.base()
+    }
+
+    fn base_mut(&mut self) -> &mut super::BaseInstance {
+        self.base.base_mut()
+    }
+}
+
+ribbon_oop::impl_castable!(BasePart, {
+    PVInstance,
+    BaseInstance,
+});

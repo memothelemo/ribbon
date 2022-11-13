@@ -1,25 +1,25 @@
 use super::prelude::*;
 
 #[derive(Debug)]
-pub struct ServiceProvider {
-    pub(crate) base: BaseInstance,
+pub struct WorldRoot {
+    pub(crate) base: Model,
 }
 
-impl ServiceProvider {
+impl WorldRoot {
     pub(crate) fn new(name: &'static str, class: ClassName) -> Self {
         Self {
-            base: BaseInstance::new(name, class),
+            base: Model::new(name, class),
         }
     }
 }
 
-impl DefaultClassName for ServiceProvider {
+impl DefaultClassName for WorldRoot {
     fn default_class_name() -> ClassName {
-        ClassName::ServiceProvider
+        ClassName::Model
     }
 }
 
-impl AnyInstance for ServiceProvider {
+impl AnyInstance for WorldRoot {
     fn base(&self) -> &BaseInstance {
         self.base.base()
     }
@@ -29,6 +29,8 @@ impl AnyInstance for ServiceProvider {
     }
 }
 
-ribbon_oop::impl_castable!(ServiceProvider, {
+ribbon_oop::impl_castable!(WorldRoot, {
+    Model,
+    PVInstance,
     BaseInstance,
 });

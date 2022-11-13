@@ -1,60 +1,42 @@
-use super::BasePart;
-
-use crate::instance::{CreatableInstance, Instance, InstanceLuaImpl, InstanceType};
-use crate::private::Sealed;
+use super::prelude::*;
 
 #[derive(Debug)]
 pub struct Part {
-    pub base: BasePart,
+    pub(crate) base: BasePart,
 }
 
 impl Part {
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
+    pub(crate) fn new(name: &'static str, class: ClassName) -> Self {
         Self {
-            base: BasePart::new("Part"),
+            base: BasePart::new(name, class),
         }
     }
 }
 
 impl CreatableInstance for Part {
     fn create(_parent: Option<Instance>) -> Instance {
-        Instance::new_from_trait(Self {
-            base: BasePart::new("Part"),
-        })
+        Instance::new_from_trait(Self::new("Part", ClassName::Part))
     }
 }
 
-impl Sealed for Part {}
-impl InstanceType for Part {
-    fn class_name(&self) -> &str {
-        "Part"
+impl DefaultClassName for Part {
+    fn default_class_name() -> ClassName {
+        ClassName::Part
     }
+}
 
+impl AnyInstance for Part {
     fn base(&self) -> &super::BaseInstance {
-        &self.base.pv.base
+        self.base.base()
     }
 
     fn base_mut(&mut self) -> &mut super::BaseInstance {
-        &mut self.base.pv.base
+        self.base.base_mut()
     }
 }
 
-impl InstanceLuaImpl for Part {
-    fn _lua_get_property<'lua>(
-        &self,
-        lua: &'lua mlua::Lua,
-        key: &str,
-    ) -> mlua::Result<Option<mlua::Value<'lua>>> {
-        BasePart::_lua_get_property(&self.base, lua, key)
-    }
-
-    fn _lua_set_property<'lua>(
-        &mut self,
-        lua: &'lua mlua::Lua,
-        key: &str,
-        value: mlua::Value<'lua>,
-    ) -> mlua::Result<Option<()>> {
-        BasePart::_lua_set_property(&mut self.base, lua, key, value)
-    }
-}
+ribbon_oop::impl_castable!(Part, {
+    BasePart,
+    PVInstance,
+    BaseInstance,
+});
