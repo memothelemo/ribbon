@@ -76,15 +76,16 @@ impl Instance {
 }
 
 impl Instance {
-    pub fn new<T: CreatableInstance>(parent: Option<Instance>) -> Self {
+    pub fn new<T: CreatableInstance + InstanceCastable>(parent: Option<Instance>) -> Self {
         let mut instance = T::create(parent.clone());
 
         unsafe {
             let ptr = instance.clone_no_ref();
             instance.get_mut().base_mut().ptr.set(ptr).unwrap();
         }
-
         instance.get_mut().set_parent(parent);
+
+        T::afterwards(instance.cast_mut::<T>().unwrap());
         instance
     }
 

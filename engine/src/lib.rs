@@ -4,24 +4,48 @@
 pub mod instance;
 pub mod types;
 
+fn visit_instance(instance: &instance::prelude::RbxInstance) {
+    fn inner(instance: &instance::prelude::RbxInstance, spaces: usize) {
+        println!(
+            "{}{} ({})",
+            "    ".repeat(spaces),
+            instance.get().class(),
+            instance.get().name()
+        );
+        for child in instance.get().children() {
+            inner(child, spaces + 1);
+        }
+    }
+    inner(instance, 0);
+}
+
 pub fn main() {
     use instance::prelude::*;
     use std::time::Instant;
 
     let now = Instant::now();
-    let _root = RbxInstance::builder::<DataModel>(|root| {
-        root.add_child(RbxInstance::builder::<Workspace>(|b| {
-            for _ in 1..1_000 {
-                b.add_child(RbxInstance::builder::<Part>(|b| b.set_name("Foo")));
-            }
-        }));
+    let root = RbxInstance::builder::<DataModel>(|root| {
+        let workspace = root.workspace_mut();
+        for _ in 1..10 {
+            workspace.add_child(RbxInstance::builder::<Part>(|b| b.set_name("Foo")));
+        }
         root.add_child(RbxInstance::builder::<Workspace>(|b| {
             b.set_name("MyVirtualWorkspace");
         }))
     });
+
     let elapsed = now.elapsed();
 
-    //visit_instance_tree(&root, 0);
+    println!(
+        "{:#?}",
+        root.cast::<ServiceProvider>()
+            .unwrap()
+            .get_service(RbxClassName::RibbonManager)
+            .unwrap()
+            .cast::<RibbonManager>()
+            .unwrap()
+    );
+    visit_instance(&root);
     println!();
     println!("Creation: {elapsed:.2?}");
 }

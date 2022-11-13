@@ -7,6 +7,12 @@ pub enum RemoveChildError {
 }
 
 #[derive(Debug, Error)]
+pub enum GetServiceFrror {
+    #[error("invalid service class name")]
+    NotService,
+}
+
+#[derive(Debug, Error)]
 pub enum AnyInstanceError {
     #[error(transparent)]
     RemoveChild(#[from] RemoveChildError),

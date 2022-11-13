@@ -56,8 +56,8 @@ impl BaseInstance {
         &self.name
     }
 
-    pub fn children(&self) -> std::slice::Iter<'_, Instance> {
-        self.children.iter()
+    pub fn children(&self) -> &[Instance] {
+        &self.children
     }
 
     pub fn get_self_ptr(&self) -> Instance {

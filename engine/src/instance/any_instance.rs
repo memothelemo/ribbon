@@ -12,7 +12,7 @@ pub trait AnyInstance: std::any::Any {
         self.base_mut().add_child(child)
     }
 
-    fn children(&self) -> std::slice::Iter<'_, Instance> {
+    fn children(&self) -> &[Instance] {
         self.base().children()
     }
 
@@ -26,6 +26,12 @@ pub trait AnyInstance: std::any::Any {
 
     fn descendants(&self) -> Vec<Instance> {
         self.base().descendants()
+    }
+
+    fn find_first_child_of_class(&self, class: ClassName) -> Option<Instance> {
+        let children = self.children();
+        let position = children.iter().position(|v| v.get().class() == class)?;
+        Some(children[position].clone())
     }
 
     fn get_self_ptr(&self) -> Instance {
@@ -55,6 +61,7 @@ pub trait AnyInstance: std::any::Any {
 
 pub trait CreatableInstance {
     fn create(parent: Option<Instance>) -> Instance;
+    fn afterwards(&mut self) {}
 }
 
 pub trait InstanceCastable: AnyInstance + DefaultClassName {

@@ -22,7 +22,15 @@ pub enum ClassName {
       ValueBase,
          StringValue,
 
+      RibbonManager,
+
       Cloud,
+}
+
+impl ClassName {
+    pub fn is_service(&self) -> bool {
+        matches!(self, Self::RibbonManager | Self::Workspace)
+    }
 }
 
 impl std::fmt::Display for ClassName {
@@ -40,6 +48,8 @@ impl std::fmt::Display for ClassName {
 
             Self::ValueBase => write!(f, "ValueBase"),
             Self::StringValue => write!(f, "StringValue"),
+
+            Self::RibbonManager => write!(f, "RibbonManager"),
 
             Self::Model => write!(f, "Model"),
             Self::WorldRoot => write!(f, "WorldRoot"),

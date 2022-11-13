@@ -1,0 +1,41 @@
+{
+    "Instance Class": {
+        "prefix": "instclass",
+        "body": [
+            "use super::prelude::*;",
+            "",
+            "#[derive(Debug)]",
+            "pub struct ${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/g} {",
+            "    pub(crate) base: BaseInstance,",
+            "}",
+            "",
+            "impl ${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/g} {",
+            "    pub(crate) fn new(name: &'static str, class: ClassName) -> Self {",
+            "        Self {",
+            "            base: BaseInstance::new(name, class),",
+            "        }",
+            "    }",
+            "}",
+            "",
+            "impl DefaultClassName for ${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/g} {",
+            "    fn default_class_name() -> ClassName {",
+            "        ClassName::${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/g}",
+            "    }",
+            "}",
+            "",
+            "impl AnyInstance for ${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/g} {",
+            "    fn base(&self) -> &BaseInstance {",
+            "        self.base.base()",
+            "    }",
+            "",
+            "    fn base_mut(&mut self) -> &mut BaseInstance {",
+            "        self.base.base_mut()",
+            "    }",
+            "}",
+            "",
+            "ribbon_oop::impl_castable!(${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/g}, {",
+            "    BaseInstance,",
+            "});"
+        ]
+    }
+}
