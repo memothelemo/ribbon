@@ -14,7 +14,7 @@ You may run this program by cloning the repository and run this command:
 cargo run
 ```
 
-**NOTE**: You'll need nightly version of Rust 1.60 (`2022-04-06`) and later because we dependent on nightly features to make Ribbon happen:
+**NOTE**: You'll need nightly version of Rust 1.64 (`2022-06-29`) and later because we dependent on nightly features to make Ribbon happen:
 
 - [`trait_upcasting`](https://github.com/rust-lang/rust/issues/65991) - for downcasting Instances.
 
