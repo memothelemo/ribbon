@@ -20,7 +20,7 @@ pub enum ClassName {
         DataModel,
 
       ValueBase,
-         StringValue,
+        StringValue,
 
       RibbonManager,
 

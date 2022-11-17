@@ -31,7 +31,7 @@ pub fn main() {
         }
         root.add_child(RbxInstance::builder::<Workspace>(|b| {
             b.set_name("MyVirtualWorkspace");
-        }))
+        }));
     });
 
     let elapsed = now.elapsed();

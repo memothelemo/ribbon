@@ -85,7 +85,9 @@ impl Instance {
         }
         instance.get_mut().set_parent(parent);
 
-        T::afterwards(instance.cast_mut::<T>().unwrap());
+        unsafe {
+            T::after_created(instance.cast_mut::<T>().unwrap());
+        }
         instance
     }
 

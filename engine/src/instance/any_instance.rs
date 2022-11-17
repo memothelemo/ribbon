@@ -61,7 +61,8 @@ pub trait AnyInstance: std::any::Any {
 
 pub trait CreatableInstance {
     fn create(parent: Option<Instance>) -> Instance;
-    fn afterwards(&mut self) {}
+
+    unsafe fn after_created(&mut self) {}
 }
 
 pub trait InstanceCastable: AnyInstance + DefaultClassName {
