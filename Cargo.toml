@@ -1,5 +1,5 @@
 [workspace]
-members = ["engine"]
+members = ["engine", "macros"]
 
 [package]
 name = "ribbon"
@@ -7,4 +7,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ribbon-engine = { path = "engine" }
+env_logger = "0.9.3"
+ribbon_engine = { path = "engine" }

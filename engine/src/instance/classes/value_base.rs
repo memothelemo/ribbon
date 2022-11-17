@@ -1,25 +1,25 @@
 use super::prelude::*;
 
 #[derive(Debug)]
-pub struct BasePart {
-    pub(crate) base: PVInstance,
+pub struct ValueBase {
+    pub(crate) base: BaseInstance,
 }
 
-impl BasePart {
+impl ValueBase {
     pub(crate) fn new(name: &'static str, class: ClassName) -> Self {
         Self {
-            base: PVInstance::new(name, class),
+            base: BaseInstance::new(name, class),
         }
     }
 }
 
-impl DefaultClassName for BasePart {
+impl DefaultClassName for ValueBase {
     fn default_class_name() -> ClassName {
-        ClassName::BasePart
+        ClassName::ValueBase
     }
 }
 
-impl AnyInstance for BasePart {
+impl AnyInstance for ValueBase {
     fn base(&self) -> &super::BaseInstance {
         self.base.base()
     }
@@ -29,10 +29,9 @@ impl AnyInstance for BasePart {
     }
 }
 
-impl Sealed for BasePart {}
-default_instance_lua_impl!(BasePart);
+impl Sealed for ValueBase {}
+default_instance_lua_impl!(ValueBase);
 
-ribbon_oop::impl_castable!(BasePart, {
-    PVInstance,
+ribbon_oop::impl_castable!(ValueBase, {
     BaseInstance,
 });

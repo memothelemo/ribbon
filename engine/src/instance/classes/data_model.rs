@@ -1,36 +1,72 @@
-use super::ServiceProvider;
-use crate::instance::Instance;
+use super::prelude::*;
 
 #[derive(Debug)]
-pub struct DataModel<'lua> {
-    pub provider: ServiceProvider,
-    pub creator_id: Option<usize>,
-    pub close_binders: Vec<mlua::Function<'lua>>,
-    pub game_id: Option<usize>,
-    pub is_sf_flags_loaded: bool,
-    pub job_id: Option<String>,
-    pub place_id: Option<usize>,
-    pub place_version: Option<usize>,
-    pub private_server_id: Option<String>,
-    pub private_server_owner_id: Option<usize>,
-    // SAFETY: it is only tied to Workspace object
-    pub workspace: Instance,
+pub struct DataModel {
+    pub(crate) base: ServiceProvider,
+
+    // Workspace as it is,
+    workspace: Instance,
 }
 
-impl<'lua> DataModel<'lua> {
-    pub fn bind_to_close(&mut self, callback: mlua::Function<'lua>) {
-        self.close_binders.push(callback);
-    }
-
-    pub fn is_loaded(&self) -> bool {
-        true
-    }
-
-    pub fn set_place_id(&mut self, place_id: usize) {
-        self.place_id = Some(place_id);
-    }
-
-    pub fn set_universe_id(&mut self, universe_id: usize) {
-        self.game_id = Some(universe_id);
+impl DataModel {
+    #[allow(unused)]
+    pub(crate) fn new(name: &'static str, class: ClassName) -> Self {
+        Self {
+            base: ServiceProvider::new(name, class),
+            workspace: Instance::new::<Workspace>(None),
+        }
     }
 }
+
+impl DataModel {
+    pub fn workspace_as_ptr(&self) -> Instance {
+        self.workspace.clone()
+    }
+
+    pub fn workspace(&self) -> &Workspace {
+        self.workspace.cast().unwrap()
+    }
+
+    pub fn workspace_mut(&mut self) -> &mut Workspace {
+        self.workspace.cast_mut().unwrap()
+    }
+}
+
+impl CreatableInstance for DataModel {
+    fn create(_parent: Option<Instance>) -> Instance {
+        let workspace = Instance::new::<Workspace>(None);
+        Instance::new_from_trait(Self {
+            base: ServiceProvider::new("DataModel", ClassName::DataModel),
+            workspace,
+        })
+    }
+
+    unsafe fn after_created(&mut self) {
+        let data_model_ptr = self.get_self_ptr();
+        self.workspace.get_mut().set_parent(Some(data_model_ptr));
+    }
+}
+
+impl DefaultClassName for DataModel {
+    fn default_class_name() -> ClassName {
+        ClassName::DataModel
+    }
+}
+
+impl AnyInstance for DataModel {
+    fn base(&self) -> &BaseInstance {
+        self.base.base()
+    }
+
+    fn base_mut(&mut self) -> &mut BaseInstance {
+        self.base.base_mut()
+    }
+}
+
+impl Sealed for DataModel {}
+default_instance_lua_impl!(DataModel);
+
+ribbon_oop::impl_castable!(DataModel, {
+    ServiceProvider,
+    BaseInstance,
+});
