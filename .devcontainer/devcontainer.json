@@ -1,0 +1,27 @@
+{
+	"name": "Codespaces Rust Starter",
+	"extensions": [
+        "bungcip.better-toml",
+		"matklad.rust-analyzer",
+		"serayuzgur.crates",
+		"vadimcn.vscode-lldb"
+	],
+	"dockerFile": "Dockerfile",
+	"settings": {
+        "[rust]": {
+            "editor.formatOnSave": true
+        },
+		"files.exclude": {
+			"**/CODE_OF_CONDUCT.md": true,
+			"**/LICENSE": true
+		},
+        "robloxLsp.diagnostics.globals": [
+            "assert_eq",
+            "assert_property",
+            "createInstanceTree"
+        ],
+        "robloxLsp.diagnostics.disable": [
+            "undefined-global"
+        ]
+	}
+}
