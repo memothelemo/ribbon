@@ -59,6 +59,9 @@ impl AnyInstance for ServiceProvider {
     }
 }
 
+impl Sealed for ServiceProvider {}
+default_instance_lua_impl!(ServiceProvider);
+
 ribbon_oop::impl_castable!(ServiceProvider, {
     BaseInstance,
 });

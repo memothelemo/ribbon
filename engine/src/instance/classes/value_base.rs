@@ -29,6 +29,9 @@ impl AnyInstance for ValueBase {
     }
 }
 
+impl Sealed for ValueBase {}
+default_instance_lua_impl!(ValueBase);
+
 ribbon_oop::impl_castable!(ValueBase, {
     BaseInstance,
 });

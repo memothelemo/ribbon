@@ -33,6 +33,9 @@
             "    }",
             "}",
             "",
+            "impl Sealed for ${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/g} {}",
+            "default_instance_lua_impl!(${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/g});",
+            "",
             "ribbon_oop::impl_castable!(${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/g}, {",
             "    BaseInstance,",
             "});"

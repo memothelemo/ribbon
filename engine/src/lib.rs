@@ -2,7 +2,10 @@
 #![feature(trait_upcasting)]
 
 pub mod instance;
+pub mod lua;
 pub mod types;
+
+pub(crate) mod private;
 
 fn visit_instance(instance: &instance::prelude::RbxInstance) {
     fn inner(instance: &instance::prelude::RbxInstance, spaces: usize) {
@@ -19,33 +22,26 @@ fn visit_instance(instance: &instance::prelude::RbxInstance) {
     inner(instance, 0);
 }
 
-pub fn main() {
+pub fn main() -> mlua::Result<()> {
     use instance::prelude::*;
-    use std::time::Instant;
+    use mlua::prelude::*;
 
-    let now = Instant::now();
-    let root = RbxInstance::builder::<DataModel>(|root| {
-        let workspace = root.workspace_mut();
-        for _ in 1..10 {
-            workspace.add_child(RbxInstance::builder::<Part>(|b| b.set_name("Foo")));
-        }
-        root.add_child(RbxInstance::builder::<Workspace>(|b| {
-            b.set_name("MyVirtualWorkspace");
-        }));
-    });
+    let root = RbxInstance::new::<DataModel>(None);
+    let lua = Lua::new();
 
-    let elapsed = now.elapsed();
+    {
+        let globals = lua.globals();
+        globals.set("Instance", lua::LuaInstanceCtor)?;
+        globals.set("game", root)?;
+    }
 
-    println!(
-        "{:#?}",
-        root.cast::<ServiceProvider>()
-            .unwrap()
-            .get_service(RbxClassName::RibbonManager)
-            .unwrap()
-            .cast::<RibbonManager>()
-            .unwrap()
-    );
-    visit_instance(&root);
-    println!();
-    println!("Creation: {elapsed:.2?}");
+    lua.load(
+        r#"
+    local instance = Instance.new("Part")
+        
+    "#,
+    )
+    .exec()?;
+
+    Ok(())
 }

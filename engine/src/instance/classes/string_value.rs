@@ -41,6 +41,9 @@ impl AnyInstance for StringValue {
     }
 }
 
+impl Sealed for StringValue {}
+default_instance_lua_impl!(StringValue);
+
 ribbon_oop::impl_castable!(StringValue, {
     ValueBase,
     BaseInstance,

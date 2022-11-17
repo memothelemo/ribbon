@@ -29,6 +29,9 @@ impl AnyInstance for WorldRoot {
     }
 }
 
+impl Sealed for WorldRoot {}
+default_instance_lua_impl!(WorldRoot);
+
 ribbon_oop::impl_castable!(WorldRoot, {
     Model,
     PVInstance,

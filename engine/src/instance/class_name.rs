@@ -1,18 +1,20 @@
+use strum::{Display, EnumString};
+
 pub trait DefaultClassName: Sized + 'static {
     fn default_class_name() -> ClassName;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumString, Display)]
 #[rustfmt::skip]
 pub enum ClassName {
     BaseInstance,
 
       PVInstance,
         BasePart,
-          Part,
+          Part, // creatable
             FormFactorPart,
 
-      Model,
+      Model, // creatable
         WorldRoot,
           Workspace,
 
@@ -20,43 +22,16 @@ pub enum ClassName {
         DataModel,
 
       ValueBase,
-        StringValue,
+        StringValue, // creatable
 
       RibbonManager,
 
-      Cloud,
+      Cloud, // creatable
 }
 
 impl ClassName {
     pub fn is_service(&self) -> bool {
         matches!(self, Self::RibbonManager | Self::Workspace)
-    }
-}
-
-impl std::fmt::Display for ClassName {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::BaseInstance => write!(f, "BaseInstance"),
-
-            Self::PVInstance => write!(f, "PVInstance"),
-            Self::BasePart => write!(f, "BasePart"),
-            Self::Part => write!(f, "Part"),
-            Self::FormFactorPart => write!(f, "FormFactorPart"),
-
-            Self::ServiceProvider => write!(f, "ServiceProvider"),
-            Self::DataModel => write!(f, "DataModel"),
-
-            Self::ValueBase => write!(f, "ValueBase"),
-            Self::StringValue => write!(f, "StringValue"),
-
-            Self::RibbonManager => write!(f, "RibbonManager"),
-
-            Self::Model => write!(f, "Model"),
-            Self::WorldRoot => write!(f, "WorldRoot"),
-            Self::Workspace => write!(f, "Workspace"),
-
-            Self::Cloud => write!(f, "Clouds"),
-        }
     }
 }
 

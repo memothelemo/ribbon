@@ -37,6 +37,9 @@ impl AnyInstance for Model {
     }
 }
 
+impl Sealed for Model {}
+default_instance_lua_impl!(Model);
+
 ribbon_oop::impl_castable!(Model, {
     PVInstance,
     BaseInstance,

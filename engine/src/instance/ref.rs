@@ -1,3 +1,4 @@
+use super::{classes, ClassName};
 use super::{AnyInstance, CreatableInstance, InstanceCastable};
 
 use std::ptr::NonNull;
@@ -91,6 +92,37 @@ impl Instance {
         instance
     }
 
+    pub fn new_from_class(
+        #[allow(unused)]
+        from_rust: bool,
+        class: ClassName,
+        parent: Option<Instance>,
+    ) -> Option<Instance> {
+        macro_rules! lazy {
+            {
+                lua { $( $class:ident, )* }
+                rust { $( $rust_class:ident, )* }
+            } => {
+                Some(match class {
+                    $( ClassName::$class => Instance::new::<classes::$class>(parent), )*
+                    $( ClassName::$rust_class if from_rust => Instance::new::<classes::$rust_class>(parent), )*
+                    _ => return None,
+                })
+            };
+        }
+        lazy! {
+            lua {
+                Part,
+                Model,
+                StringValue,
+                Cloud,
+            }
+
+            rust {
+            }
+        }
+    }
+
     pub fn builder<T: CreatableInstance + InstanceCastable>(
         mut builder: impl FnMut(&mut T),
     ) -> Self {
@@ -116,5 +148,9 @@ impl Instance {
 
     pub fn get_mut(&mut self) -> &mut dyn AnyInstance {
         unsafe { self.ptr.as_mut() }
+    }
+
+    pub unsafe fn as_ptr(&self) -> *mut dyn AnyInstance {
+        self.ptr.as_ptr()
     }
 }

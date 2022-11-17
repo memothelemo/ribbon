@@ -36,6 +36,9 @@ impl AnyInstance for RibbonManager {
     }
 }
 
+impl Sealed for RibbonManager {}
+default_instance_lua_impl!(RibbonManager);
+
 ribbon_oop::impl_castable!(RibbonManager, {
     BaseInstance,
 });

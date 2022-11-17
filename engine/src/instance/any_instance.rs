@@ -1,10 +1,11 @@
+use crate::private::InstanceLuaImpl;
 use crate::types::Ref;
 
 use super::classes::BaseInstance;
 use super::errors::*;
 use super::{ClassName, DefaultClassName, Instance};
 
-pub trait AnyInstance: std::any::Any {
+pub trait AnyInstance: std::any::Any + InstanceLuaImpl {
     fn base(&self) -> &BaseInstance;
     fn base_mut(&mut self) -> &mut BaseInstance;
 
@@ -26,6 +27,10 @@ pub trait AnyInstance: std::any::Any {
 
     fn descendants(&self) -> Vec<Instance> {
         self.base().descendants()
+    }
+
+    fn find_first_child(&self, name: &str, recursive: bool) -> Option<Instance> {
+        self.base().find_first_child(name, recursive)
     }
 
     fn find_first_child_of_class(&self, class: ClassName) -> Option<Instance> {

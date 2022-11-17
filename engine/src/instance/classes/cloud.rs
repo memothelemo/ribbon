@@ -36,6 +36,9 @@ impl CreatableInstance for Cloud {
     }
 }
 
+impl Sealed for Cloud {}
+default_instance_lua_impl!(Cloud);
+
 ribbon_oop::impl_castable!(Cloud, {
     BaseInstance,
 });

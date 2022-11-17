@@ -63,6 +63,9 @@ impl AnyInstance for DataModel {
     }
 }
 
+impl Sealed for DataModel {}
+default_instance_lua_impl!(DataModel);
+
 ribbon_oop::impl_castable!(DataModel, {
     ServiceProvider,
     BaseInstance,

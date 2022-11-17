@@ -35,6 +35,9 @@ impl AnyInstance for Part {
     }
 }
 
+impl Sealed for Part {}
+default_instance_lua_impl!(Part);
+
 ribbon_oop::impl_castable!(Part, {
     BasePart,
     PVInstance,

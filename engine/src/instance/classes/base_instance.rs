@@ -145,6 +145,21 @@ impl BaseInstance {
     }
 }
 
+impl BaseInstance {
+    pub fn find_first_child(&self, name: &str, recursive: bool) -> Option<Instance> {
+        if recursive {
+            self.descendants()
+                .into_iter()
+                .find(|v| v.get().name() == name)
+        } else {
+            self.children
+                .iter()
+                .find(|v| v.get().name() == name)
+                .cloned()
+        }
+    }
+}
+
 // SAFETY: BaseInstance as it is, you cannot move it down further
 impl InstanceCastable for BaseInstance {
     fn downcast<T: AnyInstance + DefaultClassName>(obj: &dyn AnyInstance) -> Option<&T> {
@@ -175,6 +190,42 @@ impl InstanceCastable for BaseInstance {
 impl DefaultClassName for BaseInstance {
     fn default_class_name() -> ClassName {
         ClassName::BaseInstance
+    }
+}
+
+impl Sealed for BaseInstance {}
+impl InstanceLuaImpl for BaseInstance {
+    fn lua_get_property<'lua>(
+        &self,
+        lua: &'lua mlua::Lua,
+        key: &str,
+    ) -> mlua::Result<Option<mlua::Value<'lua>>> {
+        use mlua::prelude::*;
+        match key {
+            "ClassName" => self.class.to_lua(lua),
+            "Name" => self.name.to_string().to_lua(lua),
+            "Parent" => self.parent.clone().to_lua(lua),
+
+            "FindFirstChild" => lua
+                .create_function(
+                    |lua, (inst, name, recursive): (Instance, String, Option<bool>)| {
+                        let recursive = recursive.unwrap_or_default();
+                        inst.get().find_first_child(&name, recursive).to_lua(lua)
+                    },
+                )
+                .map(LuaValue::Function),
+
+            "GetChildren" => lua
+                .create_function(|lua, inst: Instance| inst.get().children().to_vec().to_lua(lua))
+                .map(LuaValue::Function),
+
+            "GetDescendants" => lua
+                .create_function(|lua, inst: Instance| inst.get().descendants().to_lua(lua))
+                .map(LuaValue::Function),
+
+            _ => return Ok(None),
+        }
+        .map(Some)
     }
 }
 

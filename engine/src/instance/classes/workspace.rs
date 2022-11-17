@@ -35,6 +35,9 @@ impl AnyInstance for Workspace {
     }
 }
 
+impl Sealed for Workspace {}
+default_instance_lua_impl!(Workspace);
+
 ribbon_oop::impl_castable!(Workspace, {
     WorldRoot,
     Model,

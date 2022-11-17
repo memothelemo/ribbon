@@ -4,8 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# for instances
 cfg-if = "1.0.0"
 once_cell = "1.16.0"
 rand = "0.8.5"
 ribbon_oop = { path = "../macros" }
+strum = { version = "0.24.1", features = ["derive"] }
 thiserror = "1.0.37"
+
+# lua implementation
+mlua = { version = "0.8.5", features = ["luau"] }
+uuid = { version = "1.2.1", features = ["v4"] }
