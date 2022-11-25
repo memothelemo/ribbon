@@ -1,4 +1,8 @@
-## Riboon
+**This development will be postponed because of busy school schedules and insane procrastination.
+I will consider switching to C++ (if I wanted to) and good luck to myself handling memory
+on my own**
+
+## Ribbon
 
 An alternative program to [lemur](https://github.com/LPGhatguy/lemur)
 (not planning to be successor of it) that implements most of Roblox's API in
