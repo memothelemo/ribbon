@@ -11,6 +11,4 @@
 
 fn main() {
     // init_logger();
-
-    ribbon_engine::main().map_err(|e| println!("{e}")).unwrap();
 }

@@ -33,7 +33,7 @@ impl Drop for Instance {
         }
 
         unsafe {
-            self.get_mut().base_mut().drop_children();
+            self.as_mut().base_mut().drop_children();
             drop(Box::from_raw(self.ptr.as_ptr()));
         }
     }
@@ -82,9 +82,9 @@ impl Instance {
 
         unsafe {
             let ptr = instance.clone_no_ref();
-            instance.get_mut().base_mut().ptr.set(ptr).unwrap();
+            instance.as_mut().base_mut().ptr.set(ptr).unwrap();
         }
-        instance.get_mut().set_parent(parent);
+        instance.as_mut().set_parent(parent);
 
         unsafe {
             T::after_created(instance.cast_mut::<T>().unwrap());
@@ -92,9 +92,19 @@ impl Instance {
         instance
     }
 
-    pub fn new_from_class(
-        #[allow(unused)]
-        from_rust: bool,
+    pub fn builder<T: CreatableInstance + InstanceCastable>(
+        mut builder: impl FnMut(&mut T),
+    ) -> Self {
+        let mut instance = Instance::new::<T>(None);
+        builder(instance.cast_mut::<T>().unwrap());
+
+        instance
+    }
+}
+
+impl Instance {
+    pub(crate) fn new_from_class(
+        #[allow(unused)] from_rust: bool,
         class: ClassName,
         parent: Option<Instance>,
     ) -> Option<Instance> {
@@ -122,31 +132,22 @@ impl Instance {
             }
         }
     }
-
-    pub fn builder<T: CreatableInstance + InstanceCastable>(
-        mut builder: impl FnMut(&mut T),
-    ) -> Self {
-        let mut instance = Instance::new::<T>(None);
-        builder(instance.cast_mut::<T>().unwrap());
-
-        instance
-    }
 }
 
 impl Instance {
     pub fn cast<T: InstanceCastable>(&self) -> Option<&T> {
-        T::downcast(self.get())
+        T::downcast(self.as_ref())
     }
 
     pub fn cast_mut<T: InstanceCastable>(&mut self) -> Option<&mut T> {
-        T::downcast_mut(self.get_mut())
+        T::downcast_mut(self.as_mut())
     }
 
-    pub fn get(&self) -> &dyn AnyInstance {
+    pub fn as_ref(&self) -> &dyn AnyInstance {
         unsafe { self.ptr.as_ref() }
     }
 
-    pub fn get_mut(&mut self) -> &mut dyn AnyInstance {
+    pub fn as_mut(&mut self) -> &mut dyn AnyInstance {
         unsafe { self.ptr.as_mut() }
     }
 

@@ -13,7 +13,7 @@ pub enum GetServiceFrror {
 }
 
 #[derive(Debug, Error)]
-pub enum AnyInstanceError {
+pub enum InstanceError {
     #[error(transparent)]
     RemoveChild(#[from] RemoveChildError),
 }

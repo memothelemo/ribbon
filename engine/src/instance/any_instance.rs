@@ -35,7 +35,7 @@ pub trait AnyInstance: std::any::Any + InstanceLuaImpl {
 
     fn find_first_child_of_class(&self, class: ClassName) -> Option<Instance> {
         let children = self.children();
-        let position = children.iter().position(|v| v.get().class() == class)?;
+        let position = children.iter().position(|v| v.as_ref().class() == class)?;
         Some(children[position].clone())
     }
 

@@ -36,31 +36,6 @@ impl ClassName {
 }
 
 impl ClassName {
-    // Upcasting is not supported due to complications with Rust but maybe soon! :)
-    // /// ```txt
-    // ///          origin (&self)
-    // /// Instance   ⬇             target
-    // ///     <- PVInstance         ⬇
-    // ///         <- (BasePart <- Part <- FormFactorPart)
-    // ///         └- (Model <- Workspace);
-    // ///     <- Clouds
-    // /// ```
-    // pub fn can_upcast(&self, target: ClassName) -> bool {
-    //     if target == *self {
-    //         return true;
-    //     }
-    //     #[allow(clippy::match_like_matches_macro)]
-    //     match (target, self) {
-    //         (Self::FormFactorPart, Self::Part | Self::BasePart | Self::PVInstance) => true,
-    //         (Self::Part, Self::BasePart | Self::PVInstance) => true,
-
-    //         (Self::Workspace, Self::Model | Self::PVInstance) => true,
-    //         (Self::Model, Self::PVInstance) => true,
-
-    //         _ => false,
-    //     }
-    // }
-
     /// ```txt
     ///          target
     /// Instance   ⬇            origin (&self)

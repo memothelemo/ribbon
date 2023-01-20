@@ -42,20 +42,19 @@ impl<'lua> ToLua<'lua> for ClassName {
 impl LuaUserData for Instance {
     fn add_methods<'lua, M: LuaUserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_meta_method(LuaMetaMethod::Eq, |_lua, this, other: Instance| {
-            // SAFETY: we're comparing pointers, that's all
-            unsafe { Ok(this.as_ptr() == other.as_ptr()) }
+            Ok(this.as_ref().referent() == other.as_ref().referent())
         });
 
         methods.add_meta_method(LuaMetaMethod::Index, |lua, this, key: String| {
             let key = key.as_str();
-            let this = this.get();
+            let this = this.as_ref();
 
             // other properties
             if let Some(value) = this.lua_get_property(lua, key)? {
                 return Ok(value);
             }
 
-            if let Some(child) = this.find_first_child(key) {
+            if let Some(child) = this.find_first_child(key, false) {
                 return child.to_lua(lua);
             }
 

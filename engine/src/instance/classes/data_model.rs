@@ -43,7 +43,7 @@ impl CreatableInstance for DataModel {
 
     unsafe fn after_created(&mut self) {
         let data_model_ptr = self.get_self_ptr();
-        self.workspace.get_mut().set_parent(Some(data_model_ptr));
+        self.workspace.as_mut().set_parent(Some(data_model_ptr));
     }
 }
 

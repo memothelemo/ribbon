@@ -35,7 +35,7 @@ impl BaseInstance {
     fn find_child(&self, child: Ref) -> Option<usize> {
         self.children
             .iter()
-            .position(|v| v.get().referent() == child)
+            .position(|v| v.as_ref().referent() == child)
     }
 }
 
@@ -70,7 +70,7 @@ impl BaseInstance {
         let mut current = Some(self.get_self_ptr());
 
         while let Some(reference) = current {
-            let children = reference.get().children();
+            let children = reference.as_ref().children();
             for child in children {
                 descendants.push(child.clone());
                 stack.push_front(child.clone());
@@ -91,7 +91,7 @@ impl BaseInstance {
 
 impl BaseInstance {
     pub fn add_child(&mut self, mut child: Instance) {
-        child.get_mut().set_parent(Some(self.get_self_ptr()))
+        child.as_mut().set_parent(Some(self.get_self_ptr()))
     }
 
     pub fn remove_child(&mut self, referent: Ref) -> Result<(), RemoveChildError> {
@@ -105,7 +105,7 @@ impl BaseInstance {
 
     pub fn clear_parent(&mut self) {
         if let Some(mut parent) = self.base_mut().parent.take() {
-            let parent = parent.get_mut();
+            let parent = parent.as_mut();
             parent.remove_child(self.referent).unwrap();
         }
     }
@@ -114,7 +114,7 @@ impl BaseInstance {
         if let Some(mut parent) = parent {
             // not setting parent to its own object
             if let Some(old_parent) = self.parent.clone() {
-                if parent.get().referent() == old_parent.get().referent() {
+                if parent.as_ref().referent() == old_parent.as_ref().referent() {
                     return;
                 }
             }
@@ -128,7 +128,7 @@ impl BaseInstance {
             unsafe {
                 self.parent = Some(parent.clone_no_ref());
 
-                let new_parent = parent.get_mut();
+                let new_parent = parent.as_mut();
                 new_parent.base_mut().children.push(self.get_self_ptr());
             }
         } else {
@@ -150,11 +150,11 @@ impl BaseInstance {
         if recursive {
             self.descendants()
                 .into_iter()
-                .find(|v| v.get().name() == name)
+                .find(|v| v.as_ref().name() == name)
         } else {
             self.children
                 .iter()
-                .find(|v| v.get().name() == name)
+                .find(|v| v.as_ref().name() == name)
                 .cloned()
         }
     }
@@ -210,17 +210,19 @@ impl InstanceLuaImpl for BaseInstance {
                 .create_function(
                     |lua, (inst, name, recursive): (Instance, String, Option<bool>)| {
                         let recursive = recursive.unwrap_or_default();
-                        inst.get().find_first_child(&name, recursive).to_lua(lua)
+                        inst.as_ref().find_first_child(&name, recursive).to_lua(lua)
                     },
                 )
                 .map(LuaValue::Function),
 
             "GetChildren" => lua
-                .create_function(|lua, inst: Instance| inst.get().children().to_vec().to_lua(lua))
+                .create_function(|lua, inst: Instance| {
+                    inst.as_ref().children().to_vec().to_lua(lua)
+                })
                 .map(LuaValue::Function),
 
             "GetDescendants" => lua
-                .create_function(|lua, inst: Instance| inst.get().descendants().to_lua(lua))
+                .create_function(|lua, inst: Instance| inst.as_ref().descendants().to_lua(lua))
                 .map(LuaValue::Function),
 
             _ => return Ok(None),
