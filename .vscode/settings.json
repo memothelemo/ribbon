@@ -1,0 +1,13 @@
+{
+    "[rust]": {
+        "editor.formatOnSave": true
+    },
+    "robloxLsp.diagnostics.globals": [
+        "assert_eq",
+        "assert_property",
+        "createInstanceTree"
+    ],
+    "robloxLsp.diagnostics.disable": [
+        "undefined-global"
+    ]
+}

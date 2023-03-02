@@ -1,0 +1,3 @@
+[crates/engine/src/instance/class_name.rs]
+indent_size = 2
+indent_style = space

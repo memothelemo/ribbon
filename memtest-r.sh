@@ -1,0 +1,1 @@
+cargo build --release && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./target/release/ribbon

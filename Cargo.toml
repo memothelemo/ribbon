@@ -1,0 +1,13 @@
+[workspace]
+members = ["crates/*"]
+
+[package]
+name = "ribbon"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+engine = { path = "crates/engine" }
+
+[profile.dev.package.mlua]
+opt-level = 3

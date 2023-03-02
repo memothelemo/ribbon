@@ -1,0 +1,13 @@
+[package]
+name = "engine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+once_cell = "1.17.1"
+macros = { path = "../macros" }
+rand = "0.8.5"
+unsafe_pointers = { path = "../unsafe_pointers" }
+thiserror = "1.0.38"
+mlua = { version = "0.8.7", features = ["luau", "serde", "serialize"] }
+strum = { version = "0.24.1", features = ["derive"] }

@@ -1,0 +1,4 @@
+/target
+
+# unsafe checks
+vgcore.*
